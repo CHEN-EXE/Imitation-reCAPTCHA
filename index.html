@@ -1,0 +1,259 @@
+<!--
+https://github.com/CHEN-EXE/Imitation-reCAPTCHA/ 
+该项目仅供练习，切勿用于正式安全防御用途！
+关注项目主b站：Bilibili@NaOH0
+如需上线练习，请保留Github链接部分！
+-->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Imitation-reCAPTCHA</title>
+  </head>
+  <style>
+  body{
+    background-color:#e5e5e5;
+  }
+  .captcha_top{
+    padding:6px;
+  }
+    .captcha_body{
+      border: 1px solid rgb(225,225,225);
+      height:517px;
+      width:auto;
+      box-shadow: 1px 1px 1px #e5e5e5;
+    background-color: #fff;
+    }
+       .captcha_result{
+         position:absolute;
+         z-index:100000000;
+      height:517px;
+      display: none;
+      width:342px;
+    background-color: #fff;
+    }
+    .captcha_result.success{
+      background-color: #4caf505a !important;
+    }
+    .captcha_result.error{
+      background-color: #fe30305a !important;
+    }
+    .captcha_result_div{
+            top: 50%;
+              position: absolute;
+          text-align: center;
+            transform: translate(-50%, -50%);
+            font-size:26px;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s;
+            left: 50%;
+            color:#fff;
+    }
+      .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+         @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    .captcha_header{
+      background-color: rgb(56,141,231);
+      height:83px;
+      padding:20px 20px;
+      color:#fff;
+    }
+    h1,p{
+      margin:0;
+    }
+    .captcha_safe{
+      background-color: #fff;
+      height:320px;
+    }
+    .captcha_foot{
+      margin-top：5px;
+      border-top: 1px solid rgb(225,225,225);
+      height:57px;
+      padding: 5px;
+    }
+    .captcha_btn{
+      border:none;
+      outline: none;
+      color:#fff;
+      height:50px;
+      width:113px;
+    float: right ;
+      background-color: rgb(56,141,231);
+      cursor:pointer;
+    }
+    .captcha_btn:hover{
+          background-color: rgb(56,141,216);
+    }
+    .captcha_btn:disabled{
+      background-color: #ccc;
+      cursor:not-allowed;
+    }
+    .captcha_foot_text{
+      position: absolute;
+      left:90px;
+      margin-top:16px;
+    }
+    .captcha_foot_icon{
+          position: absolute;
+      left:20px;
+      margin-top:14px;
+    }
+       .captcha_foot_icon2{
+          position: absolute;
+      left:50px;
+      margin-top:14px;
+    }
+    button{
+      border:none;
+      background: none;
+      outline: none;
+    }
+       .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: auto;
+      padding:3px;
+      aspect-ratio: 1 / 1;
+    }
+    .cell {
+      position: relative;
+      overflow: hidden;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: border 0.2s;
+    }
+    .cell img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      display: block;
+    }
+    .cell.selected {
+      border-color: #4285f4;
+    }
+    .cell.selected::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      background: #4285f4 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>') center/70% no-repeat;
+      border-radius: 50%;
+    }
+  </style>
+  <body>
+    <div class="captcha_body fade-in">
+      <div class="captcha_result" id="resultPanel">
+        <div class="captcha_result_div">
+          <span id="resultIcon"></span>
+          <p id="resultText">错误</p>
+        </div>
+      </div>
+      <div class="captcha_top fade-in">
+        <div class="captcha_header">
+          <p>选择所有包含</p>
+          <h1>高雅人士视察</h1>
+          <p>的图片，点按后请按"验证"</p>
+        </div>
+        <div class="captcha_safe">
+          <div class="grid" id="grid"></div>
+        </div>
+      </div>
+      <div class="captcha_foot">
+        <a id="info" class="captcha_foot_icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="#333333" stroke-width="2"><path d="M13.737 21.848a10.002 10.002 0 0 0 6.697-15.221a10 10 0 1 0-6.698 15.221Z"/><path stroke-linecap="square" d="M12 12v6m0-11V6"/></g></svg>
+        </a>
+        <a href="https://github.com/CHEN-EXE/Imitation-reCAPTCHA/" target="_blank" id="github" class="captcha_foot_icon2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24"><g fill="none"><g clip-path="url(#IconifyId19a63d66ade394161)"><path fill="#333333" fill-rule="evenodd" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385c.6.105.825-.255.825-.57c0-.285-.015-1.23-.015-2.235c-3.015.555-3.795-.735-4.035-1.41c-.135-.345-.72-1.41-1.23-1.695c-.42-.225-1.02-.78-.015-.795c.945-.015 1.62.87 1.845 1.23c1.08 1.815 2.805 1.305 3.495.99c.105-.78.42-1.305.765-1.605c-2.67-.3-5.46-1.335-5.46-5.925c0-1.305.465-2.385 1.23-3.225c-.12-.3-.54-1.53.12-3.18c0 0 1.005-.315 3.3 1.23c.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23c.66 1.65.24 2.88.12 3.18c.765.84 1.23 1.905 1.23 3.225c0 4.605-2.805 5.625-5.475 5.925c.435.375.81 1.095.81 2.22c0 1.605-.015 2.895-.015 3.3c0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12" clip-rule="evenodd"/></g><defs><clipPath id="IconifyId19a63d66ade394161"><path fill="#fff" d="M0 0h24v24H0z"/></clipPath></defs></g></svg>
+        </a>
+        <p class="captcha_foot_text">0/1</p>
+        <button class="captcha_btn" id="verifyBtn">验证</button>
+      </div>
+    </div>
+  </body>
+  <script>
+    // 选项图片地址，从0开始列数。
+    const imageList = [
+      './img/qe3.jpg',
+      './img/qe2.png',
+      './img/qe3.jpg',
+      './img/qe2.png',
+      './img/qe2.png',
+      './img/qe3.jpg',
+      './img/qe3.jpg',
+      './img/qe3.jpg',
+      './img/qe3.jpg'
+    ];
+// 选择指定的列图片。（从0数,一共8张图片）
+    const correctIndices = [1,3,4];
+    const grid = document.getElementById('grid');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const resultPanel = document.getElementById('resultPanel');
+    const resultIcon = document.getElementById('resultIcon');
+    const resultText = document.getElementById('resultText');
+
+    let selectedIndices = new Set();
+
+    imageList.forEach((src, index) => {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.index = index;
+      cell.innerHTML = `<img src="${src}" alt="">`;
+      cell.addEventListener('click', () => {
+        cell.classList.toggle('selected');
+        if (cell.classList.contains('selected')) {
+          selectedIndices.add(index);
+        } else {
+          selectedIndices.delete(index);
+        }
+      });
+      grid.appendChild(cell);
+    });
+
+    function arraysEqual(a, b) {
+      return a.length === b.length && a.every(val => b.includes(val));
+    }
+
+    verifyBtn.addEventListener('click', () => {
+      verifyBtn.disabled = true;
+      const selectedArray = Array.from(selectedIndices).sort();
+      const isCorrect = arraysEqual(selectedArray, correctIndices);
+
+      resultPanel.classList.remove('success', 'error');
+      resultPanel.style.display = 'block';
+
+      if (isCorrect) {
+        resultPanel.classList.add('success');
+        resultIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 512 512"><path fill="#fff" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>';
+        resultText.textContent = '恭喜你答对了！';
+        setTimeout(() => {
+          resultPanel.style.display = 'none';
+          alert('验证通过');
+          location.reload();
+        }, 1500);
+      } else {
+        resultPanel.classList.add('error');
+        resultIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 384 512"><path fill="#fff" d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256L9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l137.3-137.4l137.4 137.3c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256l137.3-137.4c12.5-12.5 12.5-32.8 0-33.9s-32.8-12.5-45.3 0L192.5 210.7z"/></svg>';
+        resultText.textContent = 'NO！！！';
+        setTimeout(() => {
+          resultPanel.style.display = 'none';
+          selectedIndices.clear();
+          document.querySelectorAll('.cell.selected').forEach(cell => cell.classList.remove('selected'));
+          verifyBtn.disabled = false;
+        }, 1500);
+      }
+    });
+  </script>
+  </html>
